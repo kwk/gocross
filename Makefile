@@ -1,20 +1,28 @@
 .PHONY: all
 all:
-	echo 'mode: atomic' > coverage.txt
+	@echo -n "[INFO] Getting gocovmerge..."
+	@go get -u github.com/wadey/gocovmerge
+	@echo "DONE"
 	
-	go test -v -c -coverpkg github.com/kwk/gocross,github.com/kwk/gocross/bar,github.com/kwk/gocross/foo -covermode=atomic -o foo.test github.com/gocross/foo
-	go test -v -c -coverpkg github.com/kwk/gocross,github.com/kwk/gocross/bar,github.com/kwk/gocross/foo -covermode=atomic -o bar.test github.com/gocross/bar
-	go test -v -c -coverpkg github.com/kwk/gocross,github.com/kwk/gocross/bar,github.com/kwk/gocross/foo -covermode=atomic -o main.test github.com/gocross
+	@echo -n "[INFO] Compiling test binaries without executing them..."
+	@go test -c -coverpkg github.com/kwk/gocross,github.com/kwk/gocross/bar,github.com/kwk/gocross/foo -covermode=atomic -o foo.test github.com/kwk/gocross/foo
+	@go test -c -coverpkg github.com/kwk/gocross,github.com/kwk/gocross/bar,github.com/kwk/gocross/foo -covermode=atomic -o bar.test github.com/kwk/gocross/bar
+	@go test -c -coverpkg github.com/kwk/gocross,github.com/kwk/gocross/bar,github.com/kwk/gocross/foo -covermode=atomic -o main.test github.com/kwk/gocross
+	@echo "DONE"
 	
-	./foo.test -test.v -test.coverprofile=foo.cov
-	./bar.test -test.v -test.coverprofile=bar.cov
-	./main.test -test.v -test.coverprofile=main.cov
+	@echo -n "[INFO] Executing test binaries"
+	@./foo.test -test.v -test.coverprofile=foo.cov
+	@./bar.test -test.v -test.coverprofile=bar.cov
+	@./main.test -test.v -test.coverprofile=main.cov
+	@echo "DONE"
 	
-	tail -n +2 foo.cov >> coverage.txt
-	tail -n +2 bar.cov >> coverage.txt
-	tail -n +2 main.cov >> coverage.txt
+	@echo "[INFO] Merging coverage profiles..."
+	@gocovmerge foo.cov bar.cov main.cov > coverage.txt
+	@echo "DONE"
 	
-	go tool cover -func=coverage.txt
+	@echo "[INFO] Collecting coverage information for each package..."
+	@go tool cover -func=coverage.txt
+	@echo "DONE"
 
 .PHONY: clean
 clean:
